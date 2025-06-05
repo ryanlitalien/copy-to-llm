@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "CopyToLLM",
+  "version": "1.0.0",
+  "description": "Copy web content to clipboard for easy sharing with LLM assistants",
+  "permissions": [
+    "clipboardWrite",
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:*/*", "http://127.0.0.1:*/*", "https://*/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

@@ -1,0 +1,61 @@
+/* CopyToLLM Styles */
+#copy-to-llm-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999999;
+  
+  /* Button styling */
+  background-color: #d73502;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(215, 53, 2, 0.3);
+  transition: all 0.2s ease;
+  
+  /* Ensure visibility */
+  display: block !important;
+  opacity: 1 !important;
+}
+
+#copy-to-llm-btn:hover {
+  background-color: #b82d02;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(215, 53, 2, 0.4);
+}
+
+#copy-to-llm-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(215, 53, 2, 0.3);
+}
+
+#copy-to-llm-btn.success {
+  background-color: #22c55e;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+#copy-to-llm-btn.success:hover {
+  background-color: #16a34a;
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+/* Animation for button appearance */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+#copy-to-llm-btn {
+  animation: slideInRight 0.3s ease-out;
+}
