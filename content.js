@@ -7,7 +7,7 @@
     const title = document.title.toLowerCase();
     const body = document.body.textContent;
     
-    return (title.includes('error') || title.includes('exception')) &&
+    return (title.includes('error') || title.includes('exception') || title.includes('template')) &&
            (body.includes('Rails.root:') || body.includes('Application Trace') || 
             body.includes('Extracted source'));
   }
@@ -25,10 +25,11 @@
     let errorFile = '';
     let errorLineNum = '';
     
-    // Find error type (e.g., "NameError in Projects#index")
+    // Find error type (e.g., "NameError in Projects#index" or "ActionView::MissingTemplate in Projects::Integrations#show")
     for (let i = 0; i < Math.min(5, lines.length); i++) {
       const line = lines[i];
-      const errorMatch = line.match(/^(\w+Error)\s+in\s+(.+)$/);
+      // Updated regex to capture namespaced errors like ActionView::MissingTemplate
+      const errorMatch = line.match(/^([\w:]+(?:Error|Template))\s+in\s+(.+)$/);
       if (errorMatch) {
         errorType = errorMatch[1];
         errorLocation = errorMatch[2];
@@ -45,7 +46,9 @@
           line.startsWith('undefined local variable') ||
           line.startsWith('No route matches') ||
           line.startsWith('wrong number of arguments') ||
-          line.includes('uninitialized constant')) {
+          line.includes('uninitialized constant') ||
+          line.startsWith('Missing partial') ||
+          line.startsWith('Missing template')) {
         errorMessage = line;
         break;
       }
@@ -72,6 +75,31 @@
     
     if (errorMessage) {
       result.push(`Message: ${errorMessage}`);
+    }
+    
+    // For MissingTemplate errors, extract search paths
+    if (errorType && errorType.includes('MissingTemplate')) {
+      const searchedInIndex = lines.findIndex(line => line === 'Searched in:');
+      if (searchedInIndex !== -1) {
+        result.push('');
+        result.push('Template Search Paths:');
+        
+        // Get all the paths that were searched
+        for (let i = searchedInIndex + 1; i < lines.length && i < searchedInIndex + 20; i++) {
+          const line = lines[i];
+          
+          // Stop if we hit another section
+          if (line.includes('Extracted source') || line.includes('Rails.root:') || 
+              line.includes('Application Trace') || !line.startsWith('*')) {
+            break;
+          }
+          
+          // Add the search path
+          if (line.startsWith('* ')) {
+            result.push(`  ${line.substring(2).trim()}`);
+          }
+        }
+      }
     }
     
     // Extract code context
