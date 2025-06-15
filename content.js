@@ -18,80 +18,73 @@
     const bodyText = document.body.innerText;
     const lines = bodyText.split('\n').map(line => line.trim()).filter(line => line);
     
-    // Always include the URL for context
-    result.push(`URL: ${window.location.href}`);
-    result.push('');
+    // Get error type and location
+    let errorType = '';
+    let errorLocation = '';
+    let errorMessage = '';
+    let errorFile = '';
+    let errorLineNum = '';
     
-    // Get error type - could be in first or second line
-    let errorTypeFound = false;
-    for (let i = 0; i < Math.min(3, lines.length); i++) {
+    // Find error type (e.g., "NameError in Projects#index")
+    for (let i = 0; i < Math.min(5, lines.length); i++) {
       const line = lines[i];
-      if (line.includes('Error')) {
-        // Check for "ErrorType in Controller#action" format
-        const errorMatch = line.match(/^(\w+Error)\s+in\s+(.+)$/);
-        if (errorMatch) {
-          result.push(`Error: ${errorMatch[1]}`);
-          result.push(`Location: ${errorMatch[2]}`);
-        } else {
-          // Just an error type like "Routing Error"
-          result.push(`Error: ${line}`);
-        }
-        errorTypeFound = true;
+      const errorMatch = line.match(/^(\w+Error)\s+in\s+(.+)$/);
+      if (errorMatch) {
+        errorType = errorMatch[1];
+        errorLocation = errorMatch[2];
         break;
       }
     }
     
-    // Get the error message/details
-    let messageFound = false;
-    for (let i = 0; i < Math.min(lines.length, 15); i++) {
+    // Find the error message
+    for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       
-      // Skip the error type line we already processed
-      if (errorTypeFound && line.includes('Error') && i < 3) {
-        continue;
-      }
-      
-      // Common error message patterns
-      if (line.startsWith('No route matches') ||
-          line.startsWith('undefined method') || 
+      // Look for common error patterns
+      if (line.startsWith('undefined method') || 
+          line.startsWith('undefined local variable') ||
+          line.startsWith('No route matches') ||
           line.startsWith('wrong number of arguments') ||
-          line.includes('uninitialized constant') ||
-          line.includes('ActiveRecord::RecordNotFound') ||
-          line.includes('ActionController::') ||
-          (line.length > 10 && !line.includes('Extracted source') && 
-           !line.includes('Rails.root') && !line.includes('Application Trace'))) {
-        
-        // For routing errors, include the full message
-        if (line.startsWith('No route matches')) {
-          result.push(`Message: ${line}`);
-        } else {
-          // For other errors, truncate at "for #<" to avoid object dumps
-          const errorMsg = line.split(' for #<')[0] || line.split(' for ')[0] || line;
-          result.push(`Message: ${errorMsg.trim()}`);
-        }
-        messageFound = true;
+          line.includes('uninitialized constant')) {
+        errorMessage = line;
         break;
       }
     }
     
-    // Find the Application Trace section to get file and line
-    const traceIndex = lines.findIndex(line => line === 'Application Trace');
-    if (traceIndex !== -1 && traceIndex + 1 < lines.length) {
-      const traceLine = lines[traceIndex + 1];
-      const match = traceLine.match(/app\/(.+?):(\d+):/);
-      if (match) {
-        result.push(`\nFile: app/${match[1]}:${match[2]}`);
+    // Find file path from "Showing ..." line
+    const showingIndex = lines.findIndex(line => line.startsWith('Showing'));
+    if (showingIndex !== -1) {
+      const showingMatch = lines[showingIndex].match(/Showing\s+(.+?)\s+where\s+line\s+#?(\d+)/);
+      if (showingMatch) {
+        errorFile = showingMatch[1];
+        errorLineNum = showingMatch[2];
       }
     }
     
-    // Extract the problematic line of code (if it exists)
+    // Start building formatted output
+    if (errorType) {
+      result.push(`Rails Error: ${errorType}`);
+    }
+    
+    if (errorFile && errorLineNum) {
+      result.push(`File: ${errorFile}:${errorLineNum}`);
+    }
+    
+    if (errorMessage) {
+      result.push(`Message: ${errorMessage}`);
+    }
+    
+    // Extract code context
     const extractedSourceIndex = lines.findIndex(line => 
       line.includes('Extracted source')
     );
     
     if (extractedSourceIndex !== -1) {
-      // Look for the code section
+      result.push('');
+      result.push('Code Context:');
+      
       let codeLines = [];
+      let foundErrorLine = false;
       
       for (let i = extractedSourceIndex + 1; i < lines.length && i < extractedSourceIndex + 20; i++) {
         const line = lines[i];
@@ -109,31 +102,47 @@
             const nextLine = lines[i + 1];
             // Skip if next line is also just a number
             if (!/^\d+$/.test(nextLine) && !nextLine.includes('Rails.root:')) {
-              codeLines.push(`${lineNum}: ${nextLine}`);
+              // Check if this is the error line
+              if (lineNum === errorLineNum) {
+                codeLines.push(`${lineNum}: > ${nextLine}`);
+                foundErrorLine = true;
+              } else {
+                codeLines.push(`${lineNum}:   ${nextLine}`);
+              }
               i++; // Skip the code line we just processed
             }
           }
         }
       }
       
-      // Find the error line (usually the middle one)
-      if (codeLines.length > 0) {
-        const errorLine = codeLines[Math.floor(codeLines.length / 2)];
-        if (errorLine) {
-          result.push(`Code: ${errorLine}`);
+      // Add code lines to result
+      for (const codeLine of codeLines) {
+        result.push(codeLine);
+      }
+    }
+    
+    // Extract stack trace
+    const traceIndex = lines.findIndex(line => line === 'Application Trace');
+    if (traceIndex !== -1) {
+      result.push('');
+      result.push('Stack Trace:');
+      
+      // Get the first few trace lines
+      for (let i = traceIndex + 1; i < lines.length && i < traceIndex + 5; i++) {
+        const line = lines[i];
+        if (line && !line.includes('Framework Trace') && !line.includes('Full Trace')) {
+          // Clean up the trace line
+          const cleanedLine = line.replace(/^\s*/, '').replace(/:in\s+`(.+?)'$/, ':in `$1`');
+          if (cleanedLine.includes('app/')) {
+            result.push(`- ${cleanedLine}`);
+          }
         }
       }
     }
     
-    // If we didn't find much info, include more raw content
-    if (result.length <= 3) {
-      result.push('\nRaw content:');
-      for (let i = 0; i < Math.min(10, lines.length); i++) {
-        if (!lines[i].includes('Toggle') && !lines[i].includes('📋')) {
-          result.push(lines[i]);
-        }
-      }
-    }
+    // Add URL at the end
+    result.push('');
+    result.push(`URL: ${window.location.href}`);
     
     return result.join('\n');
   }
@@ -242,8 +251,41 @@
     document.body.appendChild(button);
   }
 
+  // Check if current URL is a local development URL
+  function isLocalUrl() {
+    const hostname = window.location.hostname;
+    
+    // Check for localhost variants
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
+      return true;
+    }
+    
+    // Check for private IP ranges
+    if (hostname.startsWith('192.168.')) {
+      return true;
+    }
+    
+    if (hostname.startsWith('10.')) {
+      return true;
+    }
+    
+    // Check for 172.16.0.0 - 172.31.255.255 range
+    const ip172Match = hostname.match(/^172\.(\d+)\./);
+    if (ip172Match) {
+      const secondOctet = parseInt(ip172Match[1]);
+      return secondOctet >= 16 && secondOctet <= 31;
+    }
+    
+    return false;
+  }
+
   // Initialize the extension
   function init() {
+    // Only run on local URLs
+    if (!isLocalUrl()) {
+      return;
+    }
+    
     // Small delay to ensure page is fully loaded
     setTimeout(createCopyButton, 100);
   }
