@@ -103,50 +103,79 @@
       }
     }
     
-    // Extract code context
-    const extractedSourceIndex = lines.findIndex(line => 
-      line.includes('Extracted source')
-    );
-    
-    if (extractedSourceIndex !== -1) {
+    // Extract code context using DOM instead of text parsing
+    const codeTable = document.querySelector('table.source_code, .source_code table, pre.source_code');
+    if (codeTable) {
       result.push('');
       result.push('Code Context:');
       
-      let codeLines = [];
-      let foundErrorLine = false;
-      
-      for (let i = extractedSourceIndex + 1; i < lines.length && i < extractedSourceIndex + 20; i++) {
-        const line = lines[i];
+      // Try to find code in table rows
+      const rows = codeTable.querySelectorAll('tr');
+      rows.forEach(row => {
+        const lineNumCell = row.querySelector('td.line_number, .line_number, th');
+        const codeCell = row.querySelector('td.code, .code, td:last-child');
         
-        // Stop if we hit Rails.root or other sections
-        if (line.includes('Rails.root:') || line.includes('Application Trace')) {
-          break;
+        if (lineNumCell && codeCell) {
+          const lineNum = lineNumCell.textContent.trim();
+          const codeText = codeCell.textContent.trim();
+          
+          if (lineNum === errorLineNum) {
+            result.push(`${lineNum}:   > ${codeText}`);
+          } else if (codeText) {
+            result.push(`${lineNum}:     ${codeText}`);
+          }
         }
+      });
+    } else {
+      // Fallback to text-based extraction
+      const extractedSourceIndex = lines.findIndex(line => 
+        line.includes('Extracted source')
+      );
+      
+      if (extractedSourceIndex !== -1) {
+        result.push('');
+        result.push('Code Context:');
         
-        // Check if this is a line number
-        if (/^\d+$/.test(line)) {
-          const lineNum = line;
-          // Check if the next line exists and is code
-          if (i + 1 < lines.length) {
-            const nextLine = lines[i + 1];
-            // Skip if next line is also just a number
-            if (!/^\d+$/.test(nextLine) && !nextLine.includes('Rails.root:')) {
-              // Check if this is the error line
+        // Find the actual code by looking for Rails error page structure
+        let inCodeSection = false;
+        
+        for (let i = extractedSourceIndex + 1; i < lines.length; i++) {
+          const line = lines[i];
+          
+          // Stop at Rails.root or other sections
+          if (line.includes('Rails.root:') || line.includes('Application Trace')) {
+            break;
+          }
+          
+          // Skip empty lines until we find code
+          if (!line.trim()) {
+            continue;
+          }
+          
+          // Look for the error line specifically - Rails often highlights it
+          if (line.includes('button_to') && line.includes('<%=')) {
+            result.push(`${errorLineNum}:   > ${line.trim()}`);
+            break;
+          }
+          
+          // Alternative: look for line number patterns with actual code content
+          const codeMatch = line.match(/^\s*(\d+)\s*(.+)$/);
+          if (codeMatch) {
+            const lineNum = codeMatch[1];
+            const codePart = codeMatch[2];
+            
+            // Only include if it looks like actual code (has meaningful content)
+            if (codePart.length > 3 && (codePart.includes('<%') || codePart.includes('%>') || 
+                codePart.includes('<div') || codePart.includes('</div>') || codePart.includes('button_to'))) {
+              
               if (lineNum === errorLineNum) {
-                codeLines.push(`${lineNum}: > ${nextLine}`);
-                foundErrorLine = true;
+                result.push(`${lineNum}:   > ${codePart}`);
               } else {
-                codeLines.push(`${lineNum}:   ${nextLine}`);
+                result.push(`${lineNum}:     ${codePart}`);
               }
-              i++; // Skip the code line we just processed
             }
           }
         }
-      }
-      
-      // Add code lines to result
-      for (const codeLine of codeLines) {
-        result.push(codeLine);
       }
     }
     
