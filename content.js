@@ -48,7 +48,8 @@
           line.startsWith('wrong number of arguments') ||
           line.includes('uninitialized constant') ||
           line.startsWith('Missing partial') ||
-          line.startsWith('Missing template')) {
+          line.startsWith('Missing template') ||
+          line.startsWith('No view template for interactive request')) {
         errorMessage = line;
         break;
       }
