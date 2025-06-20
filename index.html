@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopyToLLM - Chrome Extension Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            background: white;
+            border-radius: 15px;
+            padding: 3rem;
+            margin: 2rem 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .installation {
+            background: #2c3e50;
+            color: white;
+            padding: 3rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .installation h2 {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .install-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .step {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+
+        .step-number {
+            background: #ff6b6b;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .demo {
+            background: #ecf0f1;
+            padding: 3rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .demo-video {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .code-example {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .code-example pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .content {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>📋 CopyToLLM</h1>
+            <p>Extract Rails error information with one click for efficient AI debugging</p>
+            <a href="#installation" class="download-btn">Get Started</a>
+        </div>
+
+        <div class="content">
+            <h2>🚀 What is CopyToLLM?</h2>
+            <p>CopyToLLM is a Chrome extension that extracts key debugging information from Rails error pages with a single click, formatted perfectly for AI assistants like Claude, ChatGPT, and others.</p>
+            
+            <p>Instead of copying entire error pages that waste tokens and confuse AI models, this extension intelligently extracts only the essential information needed for debugging.</p>
+
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <h3>One-Click Extraction</h3>
+                    <p>Simply click the floating button to extract and copy error information to your clipboard</p>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Smart Filtering</h3>
+                    <p>Extracts only relevant information: error type, file location, message, code context, and stack trace</p>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Multiple Error Types</h3>
+                    <p>Works with standard Rails errors, Better Errors gem, and ActionView template errors</p>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Local Development Only</h3>
+                    <p>Restricted to localhost and local IP ranges for security</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="installation" id="installation">
+            <h2>🔧 Installation</h2>
+            <div class="install-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Download Extension</h3>
+                    <p>Clone or download the extension files from the GitHub repository</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Open Chrome Extensions</h3>
+                    <p>Navigate to <code>chrome://extensions/</code> in your browser</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Enable Developer Mode</h3>
+                    <p>Toggle "Developer mode" in the top right corner</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Load Extension</h3>
+                    <p>Click "Load unpacked" and select the extension directory</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>📖 How to Use</h2>
+            <ol>
+                <li><strong>Encounter a Rails Error:</strong> When you hit a Rails error page during local development</li>
+                <li><strong>Click the Button:</strong> Look for the floating "📋 Copy to LLM" button in the bottom right</li>
+                <li><strong>Paste to AI:</strong> The formatted error information is now in your clipboard - paste it into your AI assistant</li>
+            </ol>
+
+            <h3>Example Output</h3>
+            <div class="code-example">
+                <pre>Rails Error: NoMethodError
+File: app/controllers/users_controller.rb:15
+Message: undefined method `confirmed?' for nil:NilClass
+
+Code Context:
+13:     def show
+14:       @user = User.find(params[:id])
+15:   >   if @user.confirmed?  # <-- ERROR HERE
+16:         render :show
+17:       else
+
+Stack Trace:
+- app/controllers/users_controller.rb:15:in `show'
+- app/middleware/auth.rb:12:in `call'
+
+URL: http://localhost:3000/users/123</pre>
+            </div>
+        </div>
+
+        <div class="demo">
+            <h2>🎬 See It In Action</h2>
+            <p style="text-align: center; margin-bottom: 2rem;">Here's how CopyToLLM works with different types of Rails errors:</p>
+            
+            <div style="text-align: center;">
+                <div style="background: white; padding: 2rem; border-radius: 10px; margin: 1rem 0;">
+                    <h4>✅ Supported Error Types</h4>
+                    <ul style="text-align: left; display: inline-block;">
+                        <li>NoMethodError</li>
+                        <li>NameError / UnknownAttributeError</li>
+                        <li>ActionView::MissingTemplate</li>
+                        <li>ArgumentError (callback not defined)</li>
+                        <li>Routing errors</li>
+                        <li>Template rendering errors</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>⚙️ Technical Details</h2>
+            
+            <h3>Security Features</h3>
+            <ul>
+                <li><strong>Local Development Only:</strong> Extension only activates on localhost, 127.0.0.1, and private IP ranges</li>
+                <li><strong>Minimal Permissions:</strong> Only requires clipboard access and active tab permission</li>
+                <li><strong>No External Requests:</strong> All processing happens locally in your browser</li>
+            </ul>
+
+            <h3>Compatibility</h3>
+            <ul>
+                <li><strong>Rails Versions:</strong> Works with Rails 5.x, 6.x, and 7.x</li>
+                <li><strong>Error Gems:</strong> Compatible with Better Errors, standard Rails error pages</li>
+                <li><strong>Browsers:</strong> Chrome, Chromium, and other Chromium-based browsers</li>
+            </ul>
+
+            <h3>File Structure</h3>
+            <div class="code-example">
+                <pre>copy-to-llm/
+├── manifest.json      # Extension configuration
+├── content.js         # Main extraction logic
+├── styles.css         # Button styling
+├── icon16.png         # Extension icons
+├── icon48.png
+├── icon128.png
+└── README.md          # Documentation</pre>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🤝 Contributing</h2>
+            <p>Contributions are welcome! Here's how you can help:</p>
+            
+            <ul>
+                <li><strong>Bug Reports:</strong> Found an error type that isn't extracted properly? Open an issue!</li>
+                <li><strong>Feature Requests:</strong> Ideas for improving the extraction or adding support for other frameworks</li>
+                <li><strong>Code Contributions:</strong> Submit PRs for bug fixes or new features</li>
+                <li><strong>Documentation:</strong> Help improve this documentation or add examples</li>
+            </ul>
+
+            <p>The extension is open source and available on GitHub. Feel free to fork, modify, and submit pull requests!</p>
+        </div>
+
+        <div class="footer">
+            <p>Built with ❤️ for the Rails community • Designed to work efficiently with AI debugging assistants</p>
+            <p>© 2024 CopyToLLM • MIT License</p>
+        </div>
+    </div>
+</body>
+</html>
