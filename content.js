@@ -49,7 +49,9 @@
           line.includes('uninitialized constant') ||
           line.startsWith('Missing partial') ||
           line.startsWith('Missing template') ||
-          line.startsWith('No view template for interactive request')) {
+          line.startsWith('No view template for interactive request') ||
+          line.startsWith('Before process_action callback') ||
+          line.includes('has not been defined')) {
         errorMessage = line;
         break;
       }
