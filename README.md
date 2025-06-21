@@ -16,8 +16,8 @@ A Chrome extension that extracts key debugging information from Rails error page
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/rails-error-extractor.git
-   cd rails-error-extractor
+   git clone https://github.com/ryanlitalien/copy-to-llm.git
+   cd copy-to-llm
    ```
 
 2. Open Chrome and navigate to `chrome://extensions/`
