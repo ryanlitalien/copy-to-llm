@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ActionView::MissingTemplate in Projects::Integrations#show</title>
+</head>
+<body>
+    <h1>ActionView::MissingTemplate in Projects::Integrations#show</h1>
+    <p>Missing template projects/integrations/show</p>
+    <p>Showing /app/views/projects/integrations/index.html.erb where line #5 raised:</p>
+    <p>Searched in:</p>
+    <ul>
+        <li>* "/app/views/projects/integrations"</li> 
+        <li>* "/app/views/shared"</li>
+        <li>* "/app/views/layouts"</li>
+        <li>* "/app/views/application"</li>
+    </ul>
+    <p>Extracted source (around line #5):</p>
+    <pre class="source_code">
+3     &lt;%= link_to "Settings", project_path(@project) %&gt;
+4   &lt;/div&gt;
+5   &lt;%= render "integrations/#{@integration.name}" %&gt;
+6   &lt;div class="actions"&gt;
+7     &lt;%= link_to "Back", project_integrations_path(@project) %&gt;
+    </pre>
+    <h3>Application Trace</h3>
+    <ul>
+        <li>app/views/projects/integrations/index.html.erb:5:in `_app_views_projects_integrations_index_html_erb'</li>
+        <li>app/controllers/projects/integrations_controller.rb:12:in `show'</li>
+    </ul>
+</body>
+</html>

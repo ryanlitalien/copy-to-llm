@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NameError in Projects#index</title>
+</head>
+<body>
+    <h1>NameError in Projects#index</h1>
+    <p>undefined method `find_by_domain' for Account</p>
+    <p>Showing /app/controllers/application_controller.rb where line #15 raised:</p>
+    <p>Extracted source (around line #15):</p>
+    <table class="source_code">
+        <tr>
+            <td class="line_number">13</td>
+            <td class="code">def current_account</td>
+        </tr>
+        <tr>
+            <td class="line_number">14</td>
+            <td class="code">  return unless Jumpstart::Multitenancy.account?</td>
+        </tr>
+        <tr>
+            <td class="line_number">15</td>
+            <td class="code">  Account.find_by_domain(request.domain)</td>
+        </tr>
+        <tr>
+            <td class="line_number">16</td>
+            <td class="code">end</td>
+        </tr>
+    </table>
+    <p>Rails.root: /app</p>
+    <h3>Application Trace</h3>
+    <ul>
+        <li>app/controllers/application_controller.rb:15:in `current_account'</li>
+        <li>app/controllers/projects_controller.rb:8:in `index'</li>
+    </ul>
+</body>
+</html>

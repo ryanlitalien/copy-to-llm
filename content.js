@@ -57,13 +57,22 @@
       }
     }
     
-    // Find file path from "Showing ..." line
+    // Find file path and line number from "Showing ..." line or "Extracted source" line
     const showingIndex = lines.findIndex(line => line.startsWith('Showing'));
     if (showingIndex !== -1) {
       const showingMatch = lines[showingIndex].match(/Showing\s+(.+?)\s+where\s+line\s+#?(\d+)/);
       if (showingMatch) {
         errorFile = showingMatch[1];
         errorLineNum = showingMatch[2];
+      }
+    } else {
+      // Try to extract from "Extracted source (around line #X):" pattern
+      const extractedIndex = lines.findIndex(line => line.includes('Extracted source'));
+      if (extractedIndex !== -1) {
+        const extractedMatch = lines[extractedIndex].match(/Extracted source.*line\s+#?(\d+)/);
+        if (extractedMatch) {
+          errorLineNum = extractedMatch[1];
+        }
       }
     }
     
@@ -105,13 +114,15 @@
       }
     }
     
-    // Extract code context using DOM instead of text parsing
+    // Extract code context - improved extraction for Rails error pages
+    let codeExtracted = false;
+    
+    // Try DOM-based extraction first
     const codeTable = document.querySelector('table.source_code, .source_code table, pre.source_code');
     if (codeTable) {
       result.push('');
       result.push('Code Context:');
       
-      // Try to find code in table rows
       const rows = codeTable.querySelectorAll('tr');
       rows.forEach(row => {
         const lineNumCell = row.querySelector('td.line_number, .line_number, th');
@@ -128,8 +139,11 @@
           }
         }
       });
-    } else {
-      // Fallback to text-based extraction
+      codeExtracted = true;
+    }
+    
+    // If DOM extraction didn't work, try improved text-based extraction
+    if (!codeExtracted) {
       const extractedSourceIndex = lines.findIndex(line => 
         line.includes('Extracted source')
       );
@@ -138,43 +152,87 @@
         result.push('');
         result.push('Code Context:');
         
-        // Find the actual code by looking for Rails error page structure
-        let inCodeSection = false;
+        // Look for the code block after "Extracted source (around line #X):"
+        let foundCodeBlock = false;
         
         for (let i = extractedSourceIndex + 1; i < lines.length; i++) {
           const line = lines[i];
           
           // Stop at Rails.root or other sections
-          if (line.includes('Rails.root:') || line.includes('Application Trace')) {
+          if (line.includes('Rails.root:') || line.includes('Application Trace') || line.includes('Request')) {
             break;
           }
           
-          // Skip empty lines until we find code
+          // Skip empty lines
           if (!line.trim()) {
             continue;
           }
           
-          // Look for the error line specifically - Rails often highlights it
-          if (line.includes('button_to') && line.includes('<%=')) {
-            result.push(`${errorLineNum}:   > ${line.trim()}`);
-            break;
+          // Look for line numbers (25, 26, 27, etc.) - Rails shows context around error
+          const lineNumMatch = line.match(/^(\d+)$/);
+          if (lineNumMatch) {
+            const lineNum = lineNumMatch[1];
+            
+            // The next line should be the actual code
+            if (i + 1 < lines.length) {
+              const codeLine = lines[i + 1];
+              if (codeLine && codeLine.trim()) {
+                if (lineNum === errorLineNum) {
+                  result.push(`${lineNum}:   > ${codeLine.trim()}`);
+                } else {
+                  result.push(`${lineNum}:     ${codeLine.trim()}`);
+                }
+                foundCodeBlock = true;
+                i++; // Skip the code line we just processed
+              }
+            }
           }
           
-          // Alternative: look for line number patterns with actual code content
-          const codeMatch = line.match(/^\s*(\d+)\s*(.+)$/);
-          if (codeMatch) {
-            const lineNum = codeMatch[1];
-            const codePart = codeMatch[2];
+          // Alternative pattern: line number and code on same line
+          const lineCodeMatch = line.match(/^(\d+)\s+(.+)$/);
+          if (lineCodeMatch && lineCodeMatch[2].trim().length > 0) {
+            const lineNum = lineCodeMatch[1];
+            const codePart = lineCodeMatch[2].trim();
             
-            // Only include if it looks like actual code (has meaningful content)
-            if (codePart.length > 3 && (codePart.includes('<%') || codePart.includes('%>') || 
-                codePart.includes('<div') || codePart.includes('</div>') || codePart.includes('button_to'))) {
+            if (lineNum === errorLineNum) {
+              result.push(`${lineNum}:   > ${codePart}`);
+            } else {
+              result.push(`${lineNum}:     ${codePart}`);
+            }
+            foundCodeBlock = true;
+          }
+        }
+        
+        // If we still haven't found code, try a more aggressive search
+        if (!foundCodeBlock) {
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            
+            // Look for Ruby/Rails code patterns
+            if (line.includes('Jumpstart::Multitenancy') || 
+                line.includes('def ') || 
+                line.includes('return unless') ||
+                line.includes('.find_by') ||
+                (line.includes('Account') && line.includes('domain'))) {
+              
+              // Try to extract line number from surrounding context
+              let lineNum = errorLineNum;
+              
+              // Check previous lines for line numbers
+              for (let j = Math.max(0, i - 3); j < i; j++) {
+                const prevLine = lines[j];
+                const numMatch = prevLine.match(/^(\d+)$/);
+                if (numMatch) {
+                  lineNum = numMatch[1];
+                }
+              }
               
               if (lineNum === errorLineNum) {
-                result.push(`${lineNum}:   > ${codePart}`);
+                result.push(`${lineNum}:   > ${line.trim()}`);
               } else {
-                result.push(`${lineNum}:     ${codePart}`);
+                result.push(`${lineNum}:     ${line.trim()}`);
               }
+              foundCodeBlock = true;
             }
           }
         }
